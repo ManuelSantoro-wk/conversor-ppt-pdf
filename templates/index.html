@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Convertidor PPT a PDF</title>
+    <style>
+        body {
+            font-family: Arial;
+            margin: 40px;
+        }
+
+        input[type="file"] {
+            margin-bottom: 10px;
+        }
+
+        .converted-list {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Convertidor de PowerPoint a PDF</h1>
+    <form method="POST" action="/upload" enctype="multipart/form-data">
+        <input type="file" name="files" multiple accept=".ppt,.pptx">
+        <br>
+        <button type="submit">Convertir a PDF</button>
+    </form>
+
+    {% if converted_files %}
+    <div class="converted-list">
+        <h2>Archivos convertidos:</h2>
+        <ul>
+            {% for file in converted_files %}
+            <li><a href="{{ url_for('download_file', filename=file) }}">{{ file }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</body>
+
+</html>
