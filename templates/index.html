@@ -1,43 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 
+
 <head>
     <meta charset="UTF-8">
-    <title>Convertidor PPT a PDF</title>
-    <style>
-        body {
-            font-family: Arial;
-            margin: 40px;
-        }
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Portfólio de Manuel Santoro, desenvolvedor Front-End e UI/UX Designer de Aveiro, Portugal.">
+    <meta name="author" content="Manuel Santoro">
+    <meta name="robots" content="index, follow">
+    <meta name="keywords"
+        content="portfólio, desenvolvedor front-end, UI/UX designer, Manuel Santoro, Aveiro, projetos de programação">
+    <meta name="theme-color" content="#000000">
+    <title>Portfolio - Manuel Santoro</title>
+    <link rel="icon" type="image/x-icon" href="static/Logo/Logo.avif">
+    <link rel="stylesheet" href="../static/style.css">
 
-        input[type="file"] {
-            margin-bottom: 10px;
-        }
-
-        .converted-list {
-            margin-top: 20px;
-        }
-    </style>
+    <link href='https://fonts.googleapis.com/css?family=Quicksand' rel='stylesheet'>
 </head>
 
-<body>
-    <h1>Convertidor de PowerPoint a PDF</h1>
-    <form method="POST" action="/upload" enctype="multipart/form-data">
-        <input type="file" name="files" multiple accept=".ppt,.pptx">
-        <br>
-        <button type="submit">Convertir a PDF</button>
-    </form>
+<script>
 
-    {% if converted_files %}
-    <div class="converted-list">
-        <h2>Archivos convertidos:</h2>
-        <ul>
-            {% for file in converted_files %}
-            <li><a href="{{ url_for('download_file', filename=file) }}">{{ file }}</a></li>
-            {% endfor %}
-        </ul>
+</script>
+
+<div class="content">
+    <div class="navbar">
+        <div class="name animated-element" onclick="window.open('https://manuelsantoro.rf.gd/', '_blank')">Manuel
+            Santoro</div>
+
+        <button class="hamburger" id="hamburger" onclick="toggleMenu()">&#9776;</button>
     </div>
-    {% endif %}
+</div>
+
+<body>
+    <h1 style="text-align: center;">PPT to PDF</h1>
+
+    <form id="upload-form" action="/upload" method="POST" enctype="multipart/form-data">
+        <div id="drop-area">
+            <div class="conversion-graphic">
+                <img src="{{ url_for('static', filename='ppt.svg') }}" alt="ppt" class="icon">
+                <img src="{{ url_for('static', filename='arrow.svg') }}" alt="arrow" class="icon arrow">
+                <img src="{{ url_for('static', filename='pdf.svg') }}" alt="pdf" class="icon">
+            </div>
+
+            <input type="file" id="fileElem" name="file" accept=".pptx" required hidden>
+            <label for="fileElem" id="file-label">Choose File</label>
+            <p>or drop file here</p>
+        </div>
+        <button type="submit" id="submitBtn">Converter </button>
+    </form>
 </body>
+
+<div class="botton-container">
+    <div class="links">
+        <a href="https://www.linkedin.com/in/manuelsgra%C3%A7a/" target="_blank">LinkedIn</a>
+        <a href="https://github.com/ManuelSantoro-wk" target="_blank">GitHub</a>
+    </div>
+
+    <footer>
+        <h1>2024-present Manuel Santoro. All Rights Reserved</h1>
+    </footer>
+</div>
+<script src="script.js"></script>
 
 </html>

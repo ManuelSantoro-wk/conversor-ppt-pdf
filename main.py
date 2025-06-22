@@ -1,14 +1,12 @@
-from flask import Flask, render_template, request, send_from_directory, redirect, url_for
+from flask import Flask, render_template, request, send_from_directory
 import os
-import subprocess
 from werkzeug.utils import secure_filename
+import cloudconvert
+import requests
 
 app = Flask(__name__)
-UPLOAD_FOLDER = 'uploads'
-CONVERTED_FOLDER = 'converted'
-
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(CONVERTED_FOLDER, exist_ok=True)
+API_KEY = "SEU_API_KEY"
+cloudconvert.configure(api_key=API_KEY)
 
 @app.route('/')
 def index():
@@ -16,31 +14,60 @@ def index():
 
 @app.route('/upload', methods=['POST'])
 def upload_files():
-    uploaded_files = request.files.getlist("files")
-    converted_files = []
+    file = request.files['file']
+    input_path = os.path.join('uploads', secure_filename(file.filename))
+    file.save(input_path)
 
-    for file in uploaded_files:
-        if file and file.filename.endswith(('.ppt', '.pptx')):
-            filename = secure_filename(file.filename)
-            input_path = os.path.join(UPLOAD_FOLDER, filename)
-            file.save(input_path)
+    # Cria o job
+    job = cloudconvert.Job.create(payload={
+        "tasks": {
+            'import-my-file': {
+                'operation': 'import/upload'
+            },
+            'convert-my-file': {
+                'operation': 'convert',
+                'input': 'import-my-file',
+                'input_format': 'pptx',
+                'output_format': 'pdf',
+            },
+            'export-my-file': {
+                'operation': 'export/url',
+                'input': 'convert-my-file'
+            }
+        }
+    })
 
-            # Convert with LibreOffice
-            subprocess.run([r"C:\Program Files\LibreOffice\program\soffice.exe",  # Caminho completo para o soffice.exe
-    "--headless",
-    "--convert-to", "pdf",
-    "--outdir", CONVERTED_FOLDER,
-    input_path
-])
+    # Imprime a resposta completa do job para diagnóstico
+    print("Resposta do Job:", job)
 
-            pdf_filename = filename.rsplit('.', 1)[0] + '.pdf'
-            converted_files.append(pdf_filename)
+    # Verifica se 'tasks' existe na resposta
+    if 'tasks' not in job:
+        return f"Erro: 'tasks' não encontrado na resposta do job. Resposta completa: {job}"
 
-    return render_template('index.html', converted_files=converted_files)
+    # Pega a tarefa de upload
+    upload_task_id = job['tasks'][0]['id']
+    upload_task = cloudconvert.Task.find(id=upload_task_id)
 
-@app.route('/download/<filename>')
-def download_file(filename):
-    return send_from_directory(CONVERTED_FOLDER, filename, as_attachment=True)
+    # Faz o upload do arquivo
+    upload_url = upload_task['result']['form']['url']
+    upload_params = upload_task['result']['form']['parameters']
+    with open(input_path, 'rb') as f:
+        files = {'file': (file.filename, f)}
+        requests.post(upload_url, data=upload_params, files=files)
+
+    # Espera a conversão terminar
+    job = cloudconvert.Job.wait(id=job['id'])
+
+    # Verifica novamente se 'tasks' existe após o processamento
+    if 'tasks' not in job:
+        return f"Erro: 'tasks' não encontrado após a conversão. Resposta completa: {job}"
+
+    # Pega o link de download
+    tasks = cloudconvert.Job.find(id=job['id'])['tasks']
+    export_task = next(task for task in tasks if task['name'] == 'export-my-file')
+    file_url = export_task['result']['files'][0]['url']
+
+    return f'<a href="{file_url}" target="_blank">Download PDF</a>'
 
 if __name__ == '__main__':
     app.run(debug=True)
